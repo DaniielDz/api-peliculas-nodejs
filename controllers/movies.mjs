@@ -1,5 +1,4 @@
 import { sendJsonResponse } from "../helpers/sendJsonResponse.mjs"
-import { verifyBodyStructure } from "../helpers/verifyBodyStructure.mjs"
 import { MoviesModel } from "../models/movies.mjs"
 
 export class MoviesController {
@@ -23,16 +22,16 @@ export class MoviesController {
 
     static async getById(req, res) {
         const { id } = req.params;
-        
+
         // Validar que el ID sea numérico
         if (!/^\d+$/.test(id)) {
-            return sendJsonResponse(res, 400, { 
-                error: "El ID debe ser un número válido" 
+            return sendJsonResponse(res, 400, {
+                error: "El ID debe ser un número válido"
             });
         }
 
         const { success, statusCode, data, error } = await MoviesModel.getById({ id });
-        
+
         if (!success) {
             sendJsonResponse(res, statusCode, error);
             return;
@@ -50,5 +49,25 @@ export class MoviesController {
         }
 
         sendJsonResponse(res, statusCode, data)
+    }
+
+    static async delete(req, res) {
+        const { id } = req.params
+
+        // Validar que el ID sea numérico
+        if (!/^\d+$/.test(id)) {
+            return sendJsonResponse(res, 400, {
+                error: "El ID debe ser un número válido"
+            });
+        }
+
+        const { success, statusCode, data, error } = await MoviesModel.delete({ id });
+
+        if (!success) {
+            sendJsonResponse(res, statusCode, error);
+            return;
+        }
+
+        sendJsonResponse(res, statusCode, data);
     }
 }

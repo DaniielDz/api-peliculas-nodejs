@@ -5,8 +5,6 @@ export const addMovie = (actualmovies, body) => {
         ...body
     }
 
-    // TO-DO: si existe la pelicula (titulo) no agregar la nueva 
-
-    const newmovies = [...actualmovies, newMovie]
-    return { newmovies, newMovie }
+    const newMovies = [...actualmovies, newMovie]
+    return { newMovies, newMovie }
 }

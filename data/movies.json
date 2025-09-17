@@ -22,23 +22,5 @@
     "title": "Interstellar",
     "year": 2014,
     "genre": "Science Fiction"
-  },
-  {
-    "id": 5,
-    "title": "Gladiator",
-    "year": 2000,
-    "genre": "Historical"
-  },
-  {
-    "id": 6,
-    "title": "The Dark Knight",
-    "year": 2008,
-    "genre": "Action"
-  },
-  {
-    "id": 7,
-    "title": "The Matrix",
-    "year": 1999,
-    "genre": "Sci-Fi"
   }
 ]

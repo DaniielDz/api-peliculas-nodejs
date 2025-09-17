@@ -138,4 +138,65 @@ export class MoviesModel {
             data: newMovie
         }
     }
+
+    static async delete({ id }) {
+        if (id === '') {
+            return {
+                success: false,
+                statusCode: 400,
+                error: { message: "El ID de la película no puede estar vacío" }
+            };
+        }
+
+        const readResponse = await readJSON();
+
+        // en caso de error al leer el archivo
+        if (!readResponse.success) {
+            return {
+                success: false,
+                statusCode: 500,
+                error: readResponse.error
+            };
+        }
+
+        let movies = JSON.parse(readResponse.data);
+
+        // si el archivo no tiene peliculas
+        if (movies.length === 0) {
+            return {
+                success: false,
+                statusCode: 404,
+                error: { message: "No hay películas disponibles" }
+            };
+        }
+
+        const existMovie = movies.find(m => m.id === parseInt(id))
+        if (!existMovie) {
+            return {
+                success: false,
+                statusCode: 404,
+                error: { message: `No se encontró una pelicula con ID: ${id}` }
+            }
+        }
+
+        const newMovies = [...movies].filter(m => m.id !== parseInt(id))
+        const { success, message: errorMessage } = await writeJSON(newMovies)
+
+        if (!success) {
+            return {
+                success: false,
+                statusCode: 500,
+                error: errorMessage
+            }
+        }
+
+        return {
+            success: true,
+            statusCode: 200,
+            data: {
+                message: `La pelicula con el ID: ${id} fue eliminada correctamente.`,
+                deletedMovie: existMovie
+            }
+        }
+    }
 }

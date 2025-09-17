@@ -56,5 +56,15 @@ export function moviesRoutes(req, res) {
                 }
             }
         }
+        case 'DELETE': {
+            switch (url) {
+                case `/movies/${idURL}`: {
+                    req.params = { id: idURL }
+                    MoviesController.delete(req, res)
+                }
+            }
+
+            break
+        }
     }
 }

@@ -1,14 +1,24 @@
 export function filterMovies(filters, movies) {
-    const { genre, year } = filters
-    let filteredMovies
+    let filteredMovies = [...movies];
 
-    if(genre) {
-        filteredMovies = movies.filter(m => m.genre.toLowerCase() === genre.toLowerCase())
+    if (filters.genre) {
+        filteredMovies = filteredMovies.filter(m =>
+            m.genre.toLowerCase().includes(filters.genre.toLowerCase())
+        );
     }
 
-    if(year) {
-        filteredMovies = movies.filter(m => m.year === parseInt(year))
+    if (filters.year) {
+        const year = parseInt(filters.year);
+        if (!isNaN(year)) {
+            filteredMovies = filteredMovies.filter(m => m.year === year);
+        }
     }
 
-    return filteredMovies
+    if (filters.title) {
+        filteredMovies = filteredMovies.filter(m =>
+            m.title.toLowerCase().includes(filters.title.toLowerCase())
+        );
+    }
+
+    return filteredMovies;
 }

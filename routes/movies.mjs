@@ -1,4 +1,8 @@
 import { MoviesController } from "../controllers/movies.mjs"
+import { sendJsonResponse } from "../helpers/sendJsonResponse.mjs";
+import { parseJsonBody } from "../middlewares/parseJsonBody.mjs";
+import { runMiddlewares } from "../middlewares/runMiddlewares.mjs";
+import { validateBody } from "../middlewares/validateBody.mjs";
 
 export function moviesRoutes(req, res) {
     const { method, url } = req
@@ -41,9 +45,15 @@ export function moviesRoutes(req, res) {
         }
         case 'POST': {
             switch (url) {
-                case ('/movies'):
-                    MoviesController.create(req, res)
+                case ('/movies'): {
+                    const middlewares = [parseJsonBody, validateBody]
+                    runMiddlewares(req, res, middlewares, async (error) => {
+                        if (error) return sendJsonResponse(res, 500, { error: "Error interno" })
+
+                        MoviesController.create(req, res)
+                    })
                     break
+                }
             }
         }
     }

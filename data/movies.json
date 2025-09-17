@@ -34,5 +34,11 @@
     "title": "The Dark Knight",
     "year": 2008,
     "genre": "Action"
+  },
+  {
+    "id": 7,
+    "title": "The Matrix",
+    "year": 1999,
+    "genre": "Sci-Fi"
   }
 ]

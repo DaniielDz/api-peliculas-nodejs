@@ -120,12 +120,12 @@ export class MoviesModel {
         }
 
         // MODIFICAR contenido json
-        const newmovies = addMovie(movies, input)
+        const { newmovies, newMovie } = addMovie(movies, input)
 
         // SOBREESCRIBIR archivo .json
         const { success, message } = await writeJSON(newmovies)
         if (!success) {
-           return {
+            return {
                 success: false,
                 statusCode: 500,
                 error: message
@@ -135,7 +135,7 @@ export class MoviesModel {
         return {
             success: true,
             statusCode: 201,
-            data: input
+            data: newMovie
         }
     }
 }

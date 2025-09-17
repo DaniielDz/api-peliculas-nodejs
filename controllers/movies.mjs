@@ -22,8 +22,27 @@ export class MoviesController {
     }
 
     static async getById(req, res) {
-        const { id } = req.params
-        const { success, statusCode, data, error } = await MoviesModel.getById({ id })
+        const { id } = req.params;
+        
+        // Validar que el ID sea numérico
+        if (!/^\d+$/.test(id)) {
+            return sendJsonResponse(res, 400, { 
+                error: "El ID debe ser un número válido" 
+            });
+        }
+
+        const { success, statusCode, data, error } = await MoviesModel.getById({ id });
+        
+        if (!success) {
+            sendJsonResponse(res, statusCode, error);
+            return;
+        }
+
+        sendJsonResponse(res, statusCode, data);
+    }
+
+    static async create(req, res) {
+        const { success, statusCode, data, error } = await MoviesModel.create({ input: req.body })
 
         if (!success) {
             sendJsonResponse(res, statusCode, error)
@@ -31,36 +50,5 @@ export class MoviesController {
         }
 
         sendJsonResponse(res, statusCode, data)
-    }
-
-    static async create(req, res) {
-        let body = ''
-
-        req.on('data', (chunk) => body += chunk.toString())
-
-        req.on('end', async () => {
-            let parsedBody
-            try {
-                parsedBody = JSON.parse(body);
-            } catch (e) {
-                sendJsonResponse(res, 400, { error: "El cuerpo de la solicitud tiene un formato JSON inválido." });
-                return;
-            }
-            // Verificar que el body este en la estructura correcta
-            const isBodyCorrect = verifyBodyStructure(parsedBody)
-            if (!isBodyCorrect) {
-                sendJsonResponse(res, 400, { error: "El cuerpo de la solicitud tiene un formato JSON inválido." })
-                return
-            }
-
-            const { success, statusCode, data, error } = await MoviesModel.create({ input: parsedBody })
-
-            if (!success) {
-                sendJsonResponse(res, statusCode, error)
-                return
-            }
-
-            sendJsonResponse(res, statusCode, data)
-        })
     }
 }

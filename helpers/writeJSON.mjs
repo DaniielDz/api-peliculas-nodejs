@@ -1,8 +1,10 @@
 import { writeFile } from "node:fs/promises";
 
+const JSON_PATH = '../data/movies.json'
+
 export const writeJSON = async (actualJSON) => {
     try {
-        const url = new URL('../films.json', import.meta.url)
+        const url = new URL(JSON_PATH, import.meta.url)
         await writeFile(url, JSON.stringify(actualJSON, null, 2))
         return {
             success: true,

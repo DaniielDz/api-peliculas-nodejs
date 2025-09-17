@@ -1,6 +1,6 @@
-## Mini API de Películas (Node.js sin frameworks)
+## Mini API de Películas (Node.js sin frameworks) — Arquitectura MVC
 
-API REST mínima construida con Node.js (módulos nativos) que permite listar películas, obtener una por id y agregar nuevas películas persistiendo los datos en `films.json`.
+API REST mínima construida con Node.js (módulos nativos) que implementa una separación por capas siguiendo el patrón MVC (Model–View–Controller). Permite listar películas, obtener una por id y crear nuevas películas, persistiendo los datos en `data/movies.json`.
 
 ### Requisitos
 - **Node.js** 18+ (recomendado LTS)
@@ -12,44 +12,57 @@ API REST mínima construida con Node.js (módulos nativos) que permite listar pe
 3. Ejecuta el servidor:
 
 ```bash
-node server.mjs
+node app.mjs
 ```
 
 El servidor quedará disponible en `http://localhost:3003`.
+
+### Arquitectura MVC
+- **Routes (`routes/`)**: reciben cada solicitud HTTP, parsean `query`, `params` y delegan en el controlador correspondiente. En este proyecto `routes/movies.mjs` resuelve rutas para `/`, `/movies`, `/movies/:id` y enruta `POST /movies`.
+- **Controllers (`controllers/`)**: coordinan el flujo por petición: validan entrada (cuando aplica), invocan al modelo y formatean la respuesta mediante `sendJsonResponse`. Ver `controllers/movies.mjs`.
+- **Models (`models/`)**: encapsulan la lógica de negocio y el acceso a datos. `models/movies.mjs` lee/escribe del almacenamiento (archivo JSON), aplica filtros y gestiona códigos de estado y mensajes de error coherentes.
+- **Helpers (`helpers/`)**: utilidades puras y reutilizables para IO, validación, filtrado y respuestas HTTP (`readJSON`, `writeJSON`, `sendJsonResponse`, `filterMovies`, `addMovie`, `verifyBodyStructure`).
+
+Esta separación mejora la mantenibilidad, testabilidad y escalabilidad del proyecto.
 
 ### Estructura del proyecto
 
 ```text
 api-peliculas-nodejs/
-  server.mjs
-  films.json
+  app.mjs
+  data/
+    movies.json
+  routes/
+    movies.mjs
+  controllers/
+    movies.mjs
+  models/
+    movies.mjs
   helpers/
-    addFilm.mjs
-    findFilm.mjs
-    handleFilmsRequest.mjs
+    addMovie.mjs
+    filterMovies.mjs
     readJSON.mjs
     sendJsonResponse.mjs
     verifyBodyStructure.mjs
     writeJSON.mjs
+  README.md
 ```
 
 ### Endpoints
 
 - **GET /**
-  - Respuesta HTML simple de bienvenida.
+  - Respuesta HTML de bienvenida.
 
-- **GET /films**
-  - Devuelve el listado completo de películas almacenadas en `films.json`.
-  - Respuesta: `200 OK`, `application/json`.
+- **GET /movies**
+  - Devuelve el listado de películas. Soporta filtros opcionales por `genre` y `year` mediante query string, p. ej.: `/movies?genre=Action` o `/movies?year=2010`.
+  - Respuestas: `200 OK` con `application/json`, `404 Not Found` si no hay películas o no hay coincidencias con los filtros.
 
-- **GET /films/:id**
+- **GET /movies/:id**
   - Devuelve una película por su `id` numérico.
-  - Respuestas:
-    - `200 OK` con la película en `JSON`.
-    - `404 Not Found` si no existe.
+  - Respuestas: `200 OK` con la película en `JSON`, `404 Not Found` si no existe.
 
-- **POST /films**
-  - Crea una nueva película y la guarda en `films.json`.
+- **POST /movies**
+  - Crea una nueva película y la persiste en `data/movies.json`.
   - Cuerpo esperado (JSON estrictamente con estas 3 propiedades):
     ```json
     {
@@ -58,30 +71,37 @@ api-peliculas-nodejs/
       "genre": "string"
     }
     ```
-  - Respuestas:
-    - `201 Created` cuando se persiste correctamente.
-    - `400 Bad Request` si el JSON es inválido o la estructura no coincide.
-    - `500 Internal Server Error` si falla la lectura/escritura del archivo.
+  - Respuestas: `201 Created` cuando se persiste correctamente, `400 Bad Request` si el JSON es inválido o la estructura no coincide, `500 Internal Server Error` si falla la lectura/escritura del archivo.
 
-Notas importantes sobre validación del cuerpo en POST:
-- El validador requiere EXACTAMENTE las claves `title`, `year`, `genre` y con tipos correctos.
-- Cualquier propiedad adicional o faltante hará que la solicitud falle con `400`.
+Notas sobre validación en POST:
+- El validador exige EXACTAMENTE las claves `title`, `year`, `genre` con tipos correctos.
+- Cualquier propiedad adicional o faltante produce `400`.
 
 ### Ejemplos con curl
 
 - Listar todas las películas
 ```bash
-curl -i http://localhost:3003/films
+curl -i http://localhost:3003/movies
+```
+
+- Filtrar por género
+```bash
+curl -i "http://localhost:3003/movies?genre=Action"
+```
+
+- Filtrar por año
+```bash
+curl -i "http://localhost:3003/movies?year=2010"
 ```
 
 - Obtener una película por id (por ejemplo, 3)
 ```bash
-curl -i http://localhost:3003/films/3
+curl -i http://localhost:3003/movies/3
 ```
 
 - Crear una nueva película
 ```bash
-curl -i -X POST http://localhost:3003/films \
+curl -i -X POST http://localhost:3003/movies \
   -H "Content-Type: application/json" \
   -d '{
     "title": "The Matrix",
@@ -91,7 +111,7 @@ curl -i -X POST http://localhost:3003/films \
 ```
 
 ### Persistencia de datos
-- Los datos se leen y escriben desde/ hacia `films.json` usando los módulos nativos de Node (`fs/promises`).
+- Los datos se leen y escriben desde/hacia `data/movies.json` usando `fs/promises`.
 - Cada nueva película se añade con un `id` incremental basado en la longitud actual del array.
 - No hay control de duplicados por `title` (pendiente de mejora).
 
@@ -99,23 +119,20 @@ curl -i -X POST http://localhost:3003/films \
 - Respuestas JSON usan `application/json; charset=utf-8`.
 - Posibles códigos: `200`, `201`, `400`, `404`, `500`.
 - Mensajes de error típicos:
-  - `{"error":"No se encontró la película solicitada."}`
+  - `{"error":"No se encontró una película con el ID solicitado."}`
   - `{"error":"El cuerpo de la solicitud tiene un formato JSON inválido."}`
 
-### Decisiones técnicas y habilidades demostradas
-- Diseño con Node.js nativo: servidor HTTP sin frameworks, uso de ESM y módulos del core.
-- Modularización clara: separación en helpers (`readJSON`, `writeJSON`, `findFilm`, `verifyBodyStructure`, etc.).
-- Manejo de errores y estados HTTP: respuestas consistentes con `sendJsonResponse` y códigos 200/201/400/404/500.
-- Validación estricta de entradas: esquema mínimo tipado para `POST /films`.
-- IO asíncrono y persistencia: lectura/escritura con `fs/promises` en `films.json`.
-- Código legible y simple: pensado como demo didáctica y base para extender.
+### Decisiones técnicas destacadas
+- Node.js nativo con ESM y módulos del core; sin frameworks.
+- Separación clara por capas (MVC) para favorecer mantenimiento y pruebas.
+- Manejo consistente de estados HTTP y respuestas mediante helper dedicado.
+- Validación estricta del input en `POST /movies`.
+- Filtros básicos en `GET /movies` por `genre` y `year`.
 
-### Limitaciones actuales y cosas por agregar
-- Paginación, búsqueda y filtros en `GET /films`.
+### Roadmap / futuras mejoras
+- Paginación, búsqueda y filtros combinados para `GET /movies`.
 - Endpoints `PUT/PATCH/DELETE` para actualizar y eliminar películas.
-- Control de concurrencia para escrituras seguras en `films.json`.
-- `POST /films` debería devolver el recurso creado.
-- Esquemas de validación más flexibles (p. ej., con `zod` o `ajv`).
+- Control de concurrencia para escrituras seguras en `movies.json`.
+- `POST /movies` debería devolver el recurso creado con su `id`.
 - Documentación OpenAPI/Swagger y colección de Postman.
 - Tests unitarios e integración; CI simple (GitHub Actions).
-- Opcional: dockerización y despliegue (Railway, Render, Fly.io, etc.).

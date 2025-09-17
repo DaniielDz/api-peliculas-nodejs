@@ -1,7 +1,9 @@
 import { readFile } from 'node:fs/promises'
 
+const JSON_PATH = '../data/movies.json'
+
 export async function readJSON() {
-    const url = new URL('../films.json', import.meta.url)
+    const url = new URL(JSON_PATH, import.meta.url)
     const readResponse = {
         success: false,
         error: '',
@@ -9,12 +11,12 @@ export async function readJSON() {
     }
 
     try {
-        const films = await readFile(url, { encoding: 'utf-8' })
+        const movies = await readFile(url, { encoding: 'utf-8' })
         readResponse.success = true
-        readResponse.data = films
+        readResponse.data = movies
         return readResponse
     } catch (error) {
-        readResponse.error = JSON.stringify({ error: "Error al procesar la solicitud." })
+        readResponse.error = { message: "No se pudo procesar la solicitud, error de servidor" }
         return readResponse
     }
 }

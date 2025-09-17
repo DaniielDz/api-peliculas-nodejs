@@ -1,6 +1,6 @@
 ## Mini API de Películas (Node.js sin frameworks) — Arquitectura MVC
 
-API REST mínima construida con Node.js (módulos nativos) que implementa una separación por capas siguiendo el patrón MVC (Model–View–Controller). Permite listar películas, obtener una por id y crear nuevas películas, persistiendo los datos en `data/movies.json`.
+API REST mínima construida con Node.js (módulos nativos) que implementa una separación por capas siguiendo el patrón MVC (Model–View–Controller). Permite listar películas, obtener una por id, crear nuevas películas y eliminar películas existentes, persistiendo los datos en `data/movies.json`.
 
 ### Requisitos
 - **Node.js** 18+ (recomendado LTS)
@@ -18,7 +18,7 @@ node app.mjs
 El servidor quedará disponible en `http://localhost:3003`.
 
 ### Arquitectura MVC + Middlewares
-- **Routes (`routes/`)**: reciben cada solicitud HTTP, parsean `query`, `params` y delegan en el controlador correspondiente. En este proyecto `routes/movies.mjs` resuelve rutas para `/`, `/movies`, `/movies/:id` y enruta `POST /movies`.
+- **Routes (`routes/`)**: reciben cada solicitud HTTP, parsean `query`, `params` y delegan en el controlador correspondiente. En este proyecto `routes/movies.mjs` resuelve rutas para `/`, `/movies`, `/movies/:id` y enruta `POST /movies` y `DELETE /movies/:id`.
 - **Controllers (`controllers/`)**: coordinan el flujo por petición: validan entrada (cuando aplica), invocan al modelo y formatean la respuesta mediante `sendJsonResponse`. Ver `controllers/movies.mjs`.
 - **Models (`models/`)**: encapsulan la lógica de negocio y el acceso a datos. `models/movies.mjs` lee/escribe del almacenamiento (archivo JSON), aplica filtros y gestiona códigos de estado y mensajes de error coherentes.
 - **Middlewares (`middlewares/`)**: capa de procesamiento intermedio que maneja tareas transversales como parseo de JSON, validación de datos y ejecución de cadenas de middlewares. Incluye `parseJsonBody`, `runMiddlewares` y `validateBody`.
@@ -78,7 +78,7 @@ api-peliculas-nodejs/
   - Respuesta HTML de bienvenida.
 
 - **GET /movies**
-  - Devuelve el listado de películas. Soporta filtros opcionales por `genre` y `year` mediante query string, p. ej.: `/movies?genre=Action` o `/movies?year=2010`.
+  - Devuelve el listado de películas. Soporta filtros opcionales por `genre`, `year` y `title` mediante query string, p. ej.: `/movies?genre=Action`, `/movies?year=2010` o `/movies?title=Matrix`.
   - Respuestas: `200 OK` con `application/json`, `404 Not Found` si no hay películas o no hay coincidencias con los filtros.
 
 - **GET /movies/:id**
@@ -104,6 +104,10 @@ Notas sobre validación en POST:
 - Cualquier propiedad adicional o faltante produce `400`.
 - El middleware `parseJsonBody` maneja el parseo del JSON y `validateBody` verifica la estructura.
 
+- **DELETE /movies/:id**
+  - Elimina una película por su `id` numérico.
+  - Respuestas: `200 OK` con mensaje de confirmación y datos de la película eliminada, `404 Not Found` si no existe la película, `400 Bad Request` si el ID no es válido.
+
 ### Ejemplos con curl
 
 - Listar todas las películas
@@ -119,6 +123,11 @@ curl -i "http://localhost:3003/movies?genre=Action"
 - Filtrar por año
 ```bash
 curl -i "http://localhost:3003/movies?year=2010"
+```
+
+- Filtrar por título
+```bash
+curl -i "http://localhost:3003/movies?title=Matrix"
 ```
 
 - Obtener una película por id (por ejemplo, 3)
@@ -137,9 +146,15 @@ curl -i -X POST http://localhost:3003/movies \
   }'
 ```
 
+- Eliminar una película por id (por ejemplo, 2)
+```bash
+curl -i -X DELETE http://localhost:3003/movies/2
+```
+
 ### Persistencia de datos
 - Los datos se leen y escriben desde/hacia `data/movies.json` usando `fs/promises`.
 - Cada nueva película se añade con un `id` incremental basado en la longitud actual del array.
+- Las películas se pueden eliminar por ID, actualizando el archivo JSON.
 - No hay control de duplicados por `title` (pendiente de mejora).
 
 ### Errores y formatos de respuesta
@@ -155,12 +170,13 @@ curl -i -X POST http://localhost:3003/movies \
 - Sistema de middlewares personalizado para manejo de peticiones y validación.
 - Manejo consistente de estados HTTP y respuestas mediante helper dedicado.
 - Validación estricta del input en `POST /movies` mediante middlewares.
-- Filtros básicos en `GET /movies` por `genre` y `year`.
+- Filtros avanzados en `GET /movies` por `genre`, `year` y `title`.
+- Endpoint DELETE para eliminación de películas con validación de ID.
 - Arquitectura modular que facilita la extensión y mantenimiento del código.
 
 ### Roadmap / futuras mejoras
 - Paginación, búsqueda y filtros combinados para `GET /movies`.
-- Endpoints `PUT/PATCH/DELETE` para actualizar y eliminar películas.
+- Endpoints `PUT/PATCH` para actualizar películas existentes.
 - Control de concurrencia para escrituras seguras en `movies.json`.
 - `POST /movies` debería devolver el recurso creado con su `id`.
 - Documentación OpenAPI/Swagger y colección de Postman.

@@ -108,18 +108,7 @@ export class MoviesModel {
             };
         }
 
-        let movies = JSON.parse(readResponse.data);
-
-        // si el archivo no tiene peliculas
-        if (movies.length === 0) {
-            return {
-                success: false,
-                statusCode: 404,
-                error: { message: "No hay películas disponibles" }
-            };
-        }
-
-        // MODIFICAR contenido json
+        let movies = JSON.parse(readResponse.data) || [];
         const { newmovies, newMovie } = addMovie(movies, input)
 
         // SOBREESCRIBIR archivo .json
@@ -198,5 +187,79 @@ export class MoviesModel {
                 deletedMovie: existMovie
             }
         }
+    }
+
+    static async update({ id, input }) {
+        if (id === '' || id === undefined || id === null) {
+            return {
+                success: false,
+                statusCode: 400,
+                error: { message: "El ID de la película no puede estar vacío" }
+            };
+        }
+
+        const numericId = Number(id);
+        if (!Number.isInteger(numericId)) {
+            return {
+                success: false,
+                statusCode: 400,
+                error: { message: `El ID debe ser un número entero válido` }
+            };
+        }
+
+        // evitar que se actualice el id
+        if (input && Object.prototype.hasOwnProperty.call(input, 'id')) {
+            delete input.id;
+        }
+
+        const readResponse = await readJSON();
+
+        if (!readResponse.success) {
+            return {
+                success: false,
+                statusCode: 500,
+                error: readResponse.error
+            };
+        }
+
+        const movies = JSON.parse(readResponse.data);
+
+        if (movies.length === 0) {
+            return {
+                success: false,
+                statusCode: 404,
+                error: { message: "No hay películas disponibles" }
+            };
+        }
+
+        const existMovie = movies.find(m => m.id === numericId);
+        if (!existMovie) {
+            return {
+                success: false,
+                statusCode: 404,
+                error: { message: `No se encontró una pelicula con ID: ${id}` }
+            };
+        }
+
+        // merge inmutable (evita mutar el array original)
+        const updatedMovie = { ...existMovie, ...input };
+
+        const newMovies = movies.map(m => m.id === numericId ? updatedMovie : m);
+
+        const { success, message } = await writeJSON(newMovies);
+
+        if (!success) {
+            return {
+                success: false,
+                statusCode: 500,
+                error: message
+            };
+        }
+
+        return {
+            success: true,
+            statusCode: 200,
+            data: updatedMovie
+        };
     }
 }

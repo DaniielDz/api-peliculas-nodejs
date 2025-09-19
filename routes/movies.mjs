@@ -3,6 +3,7 @@ import { sendJsonResponse } from "../helpers/sendJsonResponse.mjs";
 import { parseJsonBody } from "../middlewares/parseJsonBody.mjs";
 import { runMiddlewares } from "../middlewares/runMiddlewares.mjs";
 import { validateBody } from "../middlewares/validateBody.mjs";
+import { validatePartialBody } from "../middlewares/validatePartialBody.mjs";
 
 export function moviesRoutes(req, res) {
     const { method, url } = req
@@ -65,6 +66,18 @@ export function moviesRoutes(req, res) {
             }
 
             break
+        }
+        case 'PATCH': {
+            if (url === `/movies/${idURL}`) {
+                req.params = { id: idURL }
+                const middlewares = [parseJsonBody, validatePartialBody]
+
+                runMiddlewares(req, res, middlewares, async (error) => {
+                    if (error) return sendJsonResponse(res, 500, { error: "Error interno" })
+
+                    MoviesController.update(req, res)
+                })
+            }
         }
     }
 }

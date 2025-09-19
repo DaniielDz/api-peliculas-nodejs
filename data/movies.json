@@ -1,9 +1,9 @@
 [
   {
     "id": 1,
-    "title": "Matrix",
+    "title": "The Shawshank Redemption",
     "year": 1999,
-    "genre": "Science Fiction"
+    "genre": "Drama"
   },
   {
     "id": 2,
@@ -22,5 +22,17 @@
     "title": "Interstellar",
     "year": 2014,
     "genre": "Science Fiction"
+  },
+  {
+    "id": 5,
+    "title": "The Dark Knight",
+    "year": 2008,
+    "genre": "Action"
+  },
+  {
+    "id": 6,
+    "title": "Pulp Fiction",
+    "year": 1994,
+    "genre": "Crime"
   }
 ]

@@ -25,8 +25,19 @@ export const verifyBodyStructure = (body, isPartial = false) => {
         if (value !== undefined) {
             if (expectedType === 'number') {
                 if (typeof value !== 'number' || !Number.isFinite(value)) return false
+                // Validación adicional para year
+                if (prop === 'year') {
+                    const currentYear = new Date().getFullYear()
+                    const minYear = 1888 // año de la primera película
+                    if (value < minYear || value > currentYear + 1) return false
+                }
             } else if (typeof value !== expectedType) {
                 return false
+            } else {
+                // Validación adicional para title: non-empty tras trim
+                if (prop === 'title') {
+                    if (typeof value !== 'string' || value.trim().length === 0) return false
+                }
             }
         }
     }

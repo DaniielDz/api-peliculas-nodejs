@@ -1,6 +1,6 @@
 ## Mini API de Películas (Node.js sin frameworks) — Arquitectura MVC
 
-API REST mínima construida con Node.js (módulos nativos) que implementa una separación por capas siguiendo el patrón MVC (Model–View–Controller). Permite listar películas, obtener por id, crear, eliminar y actualizar parcialmente películas, persistiendo los datos en `data/movies.json`.
+API REST construida con Node.js (módulos nativos) que implementa una separación por capas siguiendo el patrón MVC (Model–View–Controller). Permite listar películas, obtener por id, crear, eliminar y actualizar parcialmente películas, persistiendo los datos en `data/movies.json`.
 
 ### Requisitos
 - **Node.js** 18+ (recomendado LTS)
@@ -17,14 +17,25 @@ node app.mjs
 
 El servidor queda disponible en `http://localhost:3003`.
 
-### Arquitectura MVC + Middlewares
-- **Routes (`routes/`)**: reciben cada solicitud HTTP, parsean `query`, `params` y delegan en el controlador. `routes/movies.mjs` resuelve `/`, `/movies`, `/movies/:id` y enruta `POST /movies`, `DELETE /movies/:id` y `PATCH /movies/:id`.
-- **Controllers (`controllers/`)**: coordinan el flujo por petición: validan entrada (cuando aplica), invocan al modelo y devuelven la respuesta con `sendJsonResponse`.
-- **Models (`models/`)**: encapsulan la lógica de negocio y el acceso a datos. `models/movies.mjs` lee/escribe del archivo JSON, aplica filtros y gestiona códigos de estado y mensajes de error coherentes.
-- **Middlewares (`middlewares/`)**: parseo de JSON, validación de datos y ejecución de cadenas de middlewares: `parseJsonBody`, `validateBody`, `validatePartialBody`, `runMiddlewares`.
-- **Helpers (`helpers/`)**: utilidades para IO, validación, filtrado y respuestas HTTP: `readJSON`, `writeJSON`, `sendJsonResponse`, `filterMovies`, `addMovie`, `verifyBodyStructure`.
+### Arquitectura MVC + Services + Middlewares
 
-Esta separación mejora la mantenibilidad, testabilidad y escalabilidad del proyecto.
+La API implementa una arquitectura basada en el patrón MVC con una capa adicional de Services:
+
+- **Routes (`routes/`)**: Reciben cada solicitud HTTP, parsean `query`, `params` y delegan en el controlador. `routes/movies.mjs` resuelve `/`, `/movies`, `/movies/:id` y enruta `POST /movies`, `DELETE /movies/:id` y `PATCH /movies/:id`.
+
+- **Controllers (`controllers/`)**: Coordinan el flujo por petición, invocan a los servicios y devuelven la respuesta con `sendJsonResponse`. Actúan como punto de entrada de la capa HTTP.
+
+- **Services (`services/`)**: Capa intermedia que orquesta la lógica de negocio:
+  - `MoviesService`: Coordina entre el modelo y las reglas de negocio.
+  - `movieBusinessLogic`: Contiene funciones puras de lógica de negocio (validaciones, filtros, respuestas estándar).
+
+- **Models (`models/`)**: Encapsulan únicamente el acceso a datos. `MoviesModel` lee/escribe del archivo JSON, verifica existencia de registros y genera IDs únicos.
+
+- **Middlewares (`middlewares/`)**: Parseo de JSON, validación de datos y ejecución de cadenas de middlewares: `parseJsonBody`, `validateBody`, `validatePartialBody`, `runMiddlewares`.
+
+- **Helpers (`helpers/`)**: Utilidades para IO, validación, filtrado y respuestas HTTP: `readJSON`, `writeJSON`, `sendJsonResponse`, `filterMovies`, `addMovie`, `verifyBodyStructure`.
+
+Esta separación mejora la mantenibilidad, testabilidad, escalabilidad y facilita la reutilización de código.
 
 ### Sistema de Middlewares
 
@@ -55,6 +66,9 @@ api-peliculas-nodejs/
     movies.mjs
   controllers/
     movies.mjs
+  services/
+    movies.mjs
+    movieBusinessLogic.mjs
   models/
     movies.mjs
   middlewares/
@@ -171,9 +185,9 @@ curl -i -X PATCH http://localhost:3003/movies/1 \
 
 ### Persistencia de datos
 - Los datos se leen y escriben desde/hacia `data/movies.json` usando `fs/promises`.
-- Cada nueva película se añade con un `id` incremental basado en la longitud actual del array.
+- Cada nueva película se añade con un `id` incremental basado en el ID máximo existente + 1.
 - Al eliminar elementos pueden quedar huecos en los IDs (no se reindexa).
-- No hay control de duplicados por `title` (posible mejora).
+- **Control de duplicados**: Se valida que no existan títulos duplicados al crear o actualizar películas.
 
 ### Errores y formatos de respuesta
 - Respuestas JSON usan `application/json; charset=utf-8`.
@@ -185,13 +199,23 @@ curl -i -X PATCH http://localhost:3003/movies/1 \
 
 ### Decisiones técnicas destacadas
 - Node.js nativo con ESM y módulos del core; sin frameworks.
-- Separación clara por capas (MVC + Middlewares).
+- **Arquitectura MVC + Services** con separación clara de responsabilidades (Routes → Controllers → Services → Models).
 - Sistema de middlewares personalizado para parseo y validación.
 - Manejo consistente de estados HTTP y respuestas mediante helper dedicado.
 - Validación estricta en `POST` y validación parcial en `PATCH`.
+- **Control de duplicados** por título en creaciones y actualizaciones.
 - Filtros en `GET /movies` por `genre`, `year` y `title`.
 - Endpoint DELETE para eliminación de películas con validación de ID.
-- Arquitectura modular que facilita la extensión y mantenimiento del código.
+- Arquitectura modular que facilita la extensión, mantenimiento y testing del código.
+
+### Refactorización reciente
+
+La API ha sido refactorizada para mejorar la arquitectura y eliminar código duplicado:
+
+- **Separación de responsabilidades**: Se creó la capa de `Services` para orquestar la lógica de negocio.
+- **Eliminación de duplicación**: Funciones como `existsById` y `getNextId` se centralizaron en `MoviesModel`.
+- **Lógica de negocio pura**: Se extrajo la lógica de validación y filtrado a `movieBusinessLogic.mjs`.
+- **Mejor mantenibilidad**: Cada capa tiene una responsabilidad específica y bien definida.
 
 ### Roadmap / futuras mejoras
 - Paginación, búsqueda y filtros combinados para `GET /movies`.

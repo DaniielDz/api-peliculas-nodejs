@@ -34,5 +34,11 @@
     "title": "Pulp Fiction",
     "year": 1994,
     "genre": "Crime"
+  },
+  {
+    "id": 7,
+    "title": "Test Refactored API",
+    "year": 2023,
+    "genre": "Test"
   }
 ]

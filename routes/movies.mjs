@@ -33,13 +33,7 @@ export function moviesRoutes(req, res) {
                     break;
 
                 default:
-                    res.statusCode = 404
-                    res.setHeader('Content-Type', 'text/html; charset=utf-8')
-                    res.end(`
-                            <div style="text-align:center; width:max-content; margin: 20px auto 0">
-                                <h1 style="color:red; font-size: 36px">404</h1>
-                                <p style="font-size: 18px">Página <em>${url}</em> no encontrada</p>
-                            </div>`)
+                    sendJsonResponse(res, 404, { error: 'Ruta no encontrada' })
                     break;
             }
             break;
@@ -55,16 +49,25 @@ export function moviesRoutes(req, res) {
                     })
                     break
                 }
+                default: {
+                    sendJsonResponse(res, 404, { error: 'Ruta no encontrada' })
+                    break
+                }
             }
+            break
         }
         case 'DELETE': {
             switch (url) {
                 case `/movies/${idURL}`: {
                     req.params = { id: idURL }
                     MoviesController.delete(req, res)
+                    break
+                }
+                default: {
+                    sendJsonResponse(res, 404, { error: 'Ruta no encontrada' })
+                    break
                 }
             }
-
             break
         }
         case 'PATCH': {
@@ -77,7 +80,19 @@ export function moviesRoutes(req, res) {
 
                     MoviesController.update(req, res)
                 })
+            } else {
+                sendJsonResponse(res, 404, { error: 'Ruta no encontrada' })
+                break
             }
+            break
+        }
+        default: {
+            // 405 Method Not Allowed para métodos no soportados
+            res.statusCode = 405
+            res.setHeader('Allow', 'GET, POST, DELETE, PATCH')
+            res.setHeader('Content-Type', 'application/json; charset=utf-8')
+            res.end(JSON.stringify({ error: 'Método no permitido' }))
+            break
         }
     }
 }

@@ -83,6 +83,9 @@ api-peliculas-nodejs/
     sendJsonResponse.mjs
     verifyBodyStructure.mjs
     writeJSON.mjs
+  postman_collection.json
+  postman_environment.json
+  POSTMAN_README.md
   README.md
 ```
 
@@ -208,18 +211,23 @@ curl -i -X PATCH http://localhost:3003/movies/1 \
 - Endpoint DELETE para eliminación de películas con validación de ID.
 - Arquitectura modular que facilita la extensión, mantenimiento y testing del código.
 
-### Refactorización reciente
+### Colección de Postman
 
-La API ha sido refactorizada para mejorar la arquitectura y eliminar código duplicado:
+La API incluye una colección completa de Postman para facilitar las pruebas:
 
-- **Separación de responsabilidades**: Se creó la capa de `Services` para orquestar la lógica de negocio.
-- **Eliminación de duplicación**: Funciones como `existsById` y `getNextId` se centralizaron en `MoviesModel`.
-- **Lógica de negocio pura**: Se extrajo la lógica de validación y filtrado a `movieBusinessLogic.mjs`.
-- **Mejor mantenibilidad**: Cada capa tiene una responsabilidad específica y bien definida.
+- **Archivo de colección**: `postman_collection.json`
+- **Variables de entorno**: `postman_environment.json`
+- **Documentación**: `POSTMAN_README.md`
+
+**Cómo usar:**
+1. Importa ambos archivos en Postman
+2. Selecciona el entorno "Movies API Environment"
+3. ¡Ejecuta las peticiones!
+
+La colección incluye todos los endpoints con casos de éxito y error, perfecta para demostrar la funcionalidad completa de la API.
 
 ### Roadmap / futuras mejoras
 - Paginación, búsqueda y filtros combinados para `GET /movies`.
 - Endpoint `PUT` para reemplazos completos del recurso.
 - Control de concurrencia para escrituras seguras en `movies.json`.
-- Documentación OpenAPI/Swagger y colección de Postman.
 - Tests unitarios e integración; CI simple (GitHub Actions).

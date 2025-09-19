@@ -1,0 +1,439 @@
+{
+	"info": {
+		"_postman_id": "api-peliculas-nodejs-collection",
+		"name": "Movies API - Node.js",
+		"description": "Colección completa para la API de Películas construida con Node.js puro. Incluye todos los endpoints con ejemplos de uso y casos de prueba.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "movies-api-collection"
+	},
+	"item": [
+		{
+			"name": "Welcome",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						""
+					]
+				},
+				"description": "Endpoint de bienvenida que muestra información sobre la API y los endpoints disponibles."
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Movies",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/movies",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies"
+					]
+				},
+				"description": "Obtiene todas las películas disponibles en la API."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Movies by Genre",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/movies?genre=Action",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies"
+					],
+					"query": [
+						{
+							"key": "genre",
+							"value": "Action",
+							"description": "Filtrar películas por género"
+						}
+					]
+				},
+				"description": "Filtra películas por género específico."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Movies by Year",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/movies?year=2010",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies"
+					],
+					"query": [
+						{
+							"key": "year",
+							"value": "2010",
+							"description": "Filtrar películas por año"
+						}
+					]
+				},
+				"description": "Filtra películas por año específico."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Movies by Title",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/movies?title=Inception",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies"
+					],
+					"query": [
+						{
+							"key": "title",
+							"value": "Inception",
+							"description": "Filtrar películas por título (búsqueda parcial)"
+						}
+					]
+				},
+				"description": "Filtra películas por título (búsqueda parcial, case-insensitive)."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Movie by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/movies/1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies",
+						"1"
+					]
+				},
+				"description": "Obtiene una película específica por su ID."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Movie by ID - Not Found",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/movies/999",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies",
+						"999"
+					]
+				},
+				"description": "Intenta obtener una película que no existe (debería devolver 404)."
+			},
+			"response": []
+		},
+		{
+			"name": "Create New Movie",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"The Matrix\",\n  \"year\": 1999,\n  \"genre\": \"Sci-Fi\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/movies",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies"
+					]
+				},
+				"description": "Crea una nueva película con todos los campos requeridos."
+			},
+			"response": []
+		},
+		{
+			"name": "Create Movie - Duplicate Title",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"The Matrix\",\n  \"year\": 2020,\n  \"genre\": \"Action\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/movies",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies"
+					]
+				},
+				"description": "Intenta crear una película con un título duplicado (debería devolver 409)."
+			},
+			"response": []
+		},
+		{
+			"name": "Create Movie - Invalid Data",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"Incomplete Movie\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/movies",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies"
+					]
+				},
+				"description": "Intenta crear una película con datos incompletos (debería devolver 400)."
+			},
+			"response": []
+		},
+		{
+			"name": "Update Movie",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"The Matrix Reloaded\",\n  \"year\": 2003\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/movies/1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies",
+						"1"
+					]
+				},
+				"description": "Actualiza parcialmente una película existente."
+			},
+			"response": []
+		},
+		{
+			"name": "Update Movie - Duplicate Title",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"Inception\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/movies/1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies",
+						"1"
+					]
+				},
+				"description": "Intenta actualizar una película con un título que ya existe (debería devolver 409)."
+			},
+			"response": []
+		},
+		{
+			"name": "Update Movie - Not Found",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"Non-existent Movie\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/movies/999",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies",
+						"999"
+					]
+				},
+				"description": "Intenta actualizar una película que no existe (debería devolver 404)."
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Movie",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/movies/1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies",
+						"1"
+					]
+				},
+				"description": "Elimina una película específica por su ID."
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Movie - Not Found",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/movies/999",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movies",
+						"999"
+					]
+				},
+				"description": "Intenta eliminar una película que no existe (debería devolver 404)."
+			},
+			"response": []
+		},
+		{
+			"name": "Invalid Route",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/invalid-route",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"invalid-route"
+					]
+				},
+				"description": "Intenta acceder a una ruta que no existe (debería devolver 404)."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3003",
+			"type": "string",
+			"description": "URL base de la API de películas"
+		}
+	]
+}

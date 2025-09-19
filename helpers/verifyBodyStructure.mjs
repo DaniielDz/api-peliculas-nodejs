@@ -1,18 +1,33 @@
-export const verifyBodyStructure = (body) => {
+export const verifyBodyStructure = (body, isPartial = false) => {
     if (typeof body !== 'object' || body === null) return false
+
     const propsSchema = {
         title: 'string',
         year: 'number',
         genre: 'string'
     }
-    const requiredProps = Object.keys(propsSchema)
-    const bodyProps = Object.keys(body)
 
-    if (bodyProps.length !== requiredProps.length) return false
+    const schemaKeys = Object.keys(propsSchema)
+    const bodyKeys = Object.keys(body)
 
-    for (const prop of requiredProps) {
-        if (!body.hasOwnProperty(prop) || typeof body[prop] !== propsSchema[prop]) {
-            return false
+    // si hay propiedades que no existen en el schema → invalido
+    const hasExtraProps = bodyKeys.some(key => !schemaKeys.includes(key))
+    if (hasExtraProps) return false
+
+    for (const prop of schemaKeys) {
+        const expectedType = propsSchema[prop]
+        const value = body[prop]
+
+        // si no es parcial y falta una propiedad requerida → invalido
+        if (!isPartial && !(prop in body)) return false
+
+        // si existe, validar tipo
+        if (value !== undefined) {
+            if (expectedType === 'number') {
+                if (typeof value !== 'number' || !Number.isFinite(value)) return false
+            } else if (typeof value !== expectedType) {
+                return false
+            }
         }
     }
 

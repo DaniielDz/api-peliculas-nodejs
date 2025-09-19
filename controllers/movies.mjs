@@ -70,4 +70,25 @@ export class MoviesController {
 
         sendJsonResponse(res, statusCode, data);
     }
+
+    static async update(req, res) {
+        const { id } = req.params
+        const input = req.body
+
+        // Validar que el ID sea numérico
+        if (!/^\d+$/.test(id)) {
+            return sendJsonResponse(res, 400, {
+                error: "El ID debe ser un número válido"
+            });
+        }
+
+        const { success, statusCode, data, error } = await MoviesModel.update({ id, input });
+
+        if (!success) {
+            sendJsonResponse(res, statusCode, error);
+            return;
+        }
+
+        sendJsonResponse(res, statusCode, data);
+    }
 }

@@ -1,6 +1,6 @@
 ## Mini API de Películas (Node.js sin frameworks) — Arquitectura MVC
 
-API REST mínima construida con Node.js (módulos nativos) que implementa una separación por capas siguiendo el patrón MVC (Model–View–Controller). Permite listar películas, obtener una por id, crear nuevas películas y eliminar películas existentes, persistiendo los datos en `data/movies.json`.
+API REST mínima construida con Node.js (módulos nativos) que implementa una separación por capas siguiendo el patrón MVC (Model–View–Controller). Permite listar películas, obtener por id, crear, eliminar y actualizar parcialmente películas, persistiendo los datos en `data/movies.json`.
 
 ### Requisitos
 - **Node.js** 18+ (recomendado LTS)
@@ -15,14 +15,14 @@ API REST mínima construida con Node.js (módulos nativos) que implementa una se
 node app.mjs
 ```
 
-El servidor quedará disponible en `http://localhost:3003`.
+El servidor queda disponible en `http://localhost:3003`.
 
 ### Arquitectura MVC + Middlewares
-- **Routes (`routes/`)**: reciben cada solicitud HTTP, parsean `query`, `params` y delegan en el controlador correspondiente. En este proyecto `routes/movies.mjs` resuelve rutas para `/`, `/movies`, `/movies/:id` y enruta `POST /movies` y `DELETE /movies/:id`.
-- **Controllers (`controllers/`)**: coordinan el flujo por petición: validan entrada (cuando aplica), invocan al modelo y formatean la respuesta mediante `sendJsonResponse`. Ver `controllers/movies.mjs`.
-- **Models (`models/`)**: encapsulan la lógica de negocio y el acceso a datos. `models/movies.mjs` lee/escribe del almacenamiento (archivo JSON), aplica filtros y gestiona códigos de estado y mensajes de error coherentes.
-- **Middlewares (`middlewares/`)**: capa de procesamiento intermedio que maneja tareas transversales como parseo de JSON, validación de datos y ejecución de cadenas de middlewares. Incluye `parseJsonBody`, `runMiddlewares` y `validateBody`.
-- **Helpers (`helpers/`)**: utilidades puras y reutilizables para IO, validación, filtrado y respuestas HTTP (`readJSON`, `writeJSON`, `sendJsonResponse`, `filterMovies`, `addMovie`, `verifyBodyStructure`).
+- **Routes (`routes/`)**: reciben cada solicitud HTTP, parsean `query`, `params` y delegan en el controlador. `routes/movies.mjs` resuelve `/`, `/movies`, `/movies/:id` y enruta `POST /movies`, `DELETE /movies/:id` y `PATCH /movies/:id`.
+- **Controllers (`controllers/`)**: coordinan el flujo por petición: validan entrada (cuando aplica), invocan al modelo y devuelven la respuesta con `sendJsonResponse`.
+- **Models (`models/`)**: encapsulan la lógica de negocio y el acceso a datos. `models/movies.mjs` lee/escribe del archivo JSON, aplica filtros y gestiona códigos de estado y mensajes de error coherentes.
+- **Middlewares (`middlewares/`)**: parseo de JSON, validación de datos y ejecución de cadenas de middlewares: `parseJsonBody`, `validateBody`, `validatePartialBody`, `runMiddlewares`.
+- **Helpers (`helpers/`)**: utilidades para IO, validación, filtrado y respuestas HTTP: `readJSON`, `writeJSON`, `sendJsonResponse`, `filterMovies`, `addMovie`, `verifyBodyStructure`.
 
 Esta separación mejora la mantenibilidad, testabilidad y escalabilidad del proyecto.
 
@@ -30,13 +30,12 @@ Esta separación mejora la mantenibilidad, testabilidad y escalabilidad del proy
 
 El proyecto implementa un sistema de middlewares personalizado que permite procesar las peticiones HTTP de manera modular:
 
-- **`parseJsonBody.mjs`**: Middleware que parsea automáticamente el cuerpo JSON de las peticiones POST/PUT/PATCH. Maneja errores de parseo y establece `req.body` para uso posterior.
+- `parseJsonBody.mjs`: parsea automáticamente el cuerpo JSON de peticiones POST/PUT/PATCH. Maneja errores de parseo y establece `req.body`.
+- `validateBody.mjs`: valida la estructura del cuerpo contra el esquema para creaciones (requerido completo).
+- `validatePartialBody.mjs`: valida la estructura para actualizaciones parciales (todas las claves opcionales, tipos correctos, sin extras).
+- `runMiddlewares.mjs`: Sistema de ejecución de cadenas de middlewares similar a Express.js. Permite ejecutar middlewares de forma secuencial con manejo de errores integrado.
 
-- **`validateBody.mjs`**: Middleware que valida la estructura del cuerpo de la petición usando `verifyBodyStructure`. Asegura que los datos cumplan con el esquema esperado.
-
-- **`runMiddlewares.mjs`**: Sistema de ejecución de cadenas de middlewares similar a Express.js. Permite ejecutar middlewares de forma secuencial con manejo de errores integrado.
-
-**Ejemplo de uso en las rutas:**
+Ejemplo en rutas:
 ```javascript
 const middlewares = [parseJsonBody, validateBody]
 runMiddlewares(req, res, middlewares, async (error) => {
@@ -62,6 +61,7 @@ api-peliculas-nodejs/
     parseJsonBody.mjs
     runMiddlewares.mjs
     validateBody.mjs
+    validatePartialBody.mjs
   helpers/
     addMovie.mjs
     filterMovies.mjs
@@ -74,18 +74,20 @@ api-peliculas-nodejs/
 
 ### Endpoints
 
-- **GET /**
+- GET `/`
   - Respuesta HTML de bienvenida.
 
-- **GET /movies**
-  - Devuelve el listado de películas. Soporta filtros opcionales por `genre`, `year` y `title` mediante query string, p. ej.: `/movies?genre=Action`, `/movies?year=2010` o `/movies?title=Matrix`.
-  - Respuestas: `200 OK` con `application/json`, `404 Not Found` si no hay películas o no hay coincidencias con los filtros.
+- GET `/movies`
+  - Devuelve el listado de películas.
+  - Filtros opcionales por `genre`, `year` y `title` mediante query string, p. ej.: `?genre=Action`, `?year=2010`, `?title=Matrix`.
+  - Códigos: `200 OK`, `404 Not Found` si no hay datos o no hay coincidencias.
 
-- **GET /movies/:id**
+- GET `/movies/:id`
   - Devuelve una película por su `id` numérico.
-  - Respuestas: `200 OK` con la película en `JSON`, `404 Not Found` si no existe.
+  - Valida que `id` sea numérico; en caso contrario responde `400`.
+  - Códigos: `200 OK`, `404 Not Found` si no existe, `400 Bad Request` si `id` inválido.
 
-- **POST /movies**
+- POST `/movies`
   - Crea una nueva película y la persiste en `data/movies.json`.
   - Utiliza un sistema de middlewares para validación automática del cuerpo de la petición.
   - Cuerpo esperado (JSON estrictamente con estas 3 propiedades):
@@ -96,17 +98,19 @@ api-peliculas-nodejs/
       "genre": "string"
     }
     ```
-  - Respuestas: `201 Created` cuando se persiste correctamente, `400 Bad Request` si el JSON es inválido o la estructura no coincide, `500 Internal Server Error` si falla la lectura/escritura del archivo.
+  - Reglas: no se permiten propiedades extra; tipos deben coincidir.
+  - Códigos: `201 Created`, `400 Bad Request` si el JSON o la estructura es inválida, `500 Internal Server Error` si falla IO.
 
-Notas sobre validación en POST:
-- El sistema de middlewares valida automáticamente el formato JSON y la estructura del cuerpo.
-- El validador exige EXACTAMENTE las claves `title`, `year`, `genre` con tipos correctos.
-- Cualquier propiedad adicional o faltante produce `400`.
-- El middleware `parseJsonBody` maneja el parseo del JSON y `validateBody` verifica la estructura.
-
-- **DELETE /movies/:id**
+- DELETE `/movies/:id`
   - Elimina una película por su `id` numérico.
-  - Respuestas: `200 OK` con mensaje de confirmación y datos de la película eliminada, `404 Not Found` si no existe la película, `400 Bad Request` si el ID no es válido.
+  - Valida que `id` sea numérico.
+  - Códigos: `200 OK` con mensaje y `deletedMovie`, `404 Not Found` si no existe, `400 Bad Request` si `id` inválido.
+
+- PATCH `/movies/:id`
+  - Actualiza parcialmente una película existente.
+  - Middlewares: `parseJsonBody`, `validatePartialBody`.
+  - Reglas: todas las claves son opcionales, tipos deben ser correctos; no se permite actualizar `id` (se ignora si viene en el body).
+  - Códigos: `200 OK` con el recurso actualizado, `404 Not Found` si no existe, `400 Bad Request` si `id` inválido, `500 Internal Server Error` si falla IO.
 
 ### Ejemplos con curl
 
@@ -135,6 +139,11 @@ curl -i "http://localhost:3003/movies?title=Matrix"
 curl -i http://localhost:3003/movies/3
 ```
 
+- Intentar obtener con id inválido
+```bash
+curl -i http://localhost:3003/movies/abc
+```
+
 - Crear una nueva película
 ```bash
 curl -i -X POST http://localhost:3003/movies \
@@ -151,33 +160,42 @@ curl -i -X POST http://localhost:3003/movies \
 curl -i -X DELETE http://localhost:3003/movies/2
 ```
 
+- Actualización parcial (PATCH) de una película (por ejemplo, 1)
+```bash
+curl -i -X PATCH http://localhost:3003/movies/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "genre": "Science Fiction"
+  }'
+```
+
 ### Persistencia de datos
 - Los datos se leen y escriben desde/hacia `data/movies.json` usando `fs/promises`.
 - Cada nueva película se añade con un `id` incremental basado en la longitud actual del array.
-- Las películas se pueden eliminar por ID, actualizando el archivo JSON.
-- No hay control de duplicados por `title` (pendiente de mejora).
+- Al eliminar elementos pueden quedar huecos en los IDs (no se reindexa).
+- No hay control de duplicados por `title` (posible mejora).
 
 ### Errores y formatos de respuesta
 - Respuestas JSON usan `application/json; charset=utf-8`.
-- Posibles códigos: `200`, `201`, `400`, `404`, `500`.
+- Códigos posibles: `200`, `201`, `400`, `404`, `500`.
 - Mensajes de error típicos:
-  - `{"error":"No se encontró una película con el ID solicitado."}`
-  - `{"error":"El cuerpo de la solicitud tiene un formato JSON inválido."}`
+  - `{ "error": "El cuerpo de la solicitud tiene un formato JSON inválido." }`
+  - `{ "error": "El ID debe ser un número válido" }`
+  - `{ "message": "No se encontraron películas que coincidan con los filtros proporcionados" }`
 
 ### Decisiones técnicas destacadas
 - Node.js nativo con ESM y módulos del core; sin frameworks.
-- Separación clara por capas (MVC + Middlewares) para favorecer mantenimiento y pruebas.
-- Sistema de middlewares personalizado para manejo de peticiones y validación.
+- Separación clara por capas (MVC + Middlewares).
+- Sistema de middlewares personalizado para parseo y validación.
 - Manejo consistente de estados HTTP y respuestas mediante helper dedicado.
-- Validación estricta del input en `POST /movies` mediante middlewares.
-- Filtros avanzados en `GET /movies` por `genre`, `year` y `title`.
+- Validación estricta en `POST` y validación parcial en `PATCH`.
+- Filtros en `GET /movies` por `genre`, `year` y `title`.
 - Endpoint DELETE para eliminación de películas con validación de ID.
 - Arquitectura modular que facilita la extensión y mantenimiento del código.
 
 ### Roadmap / futuras mejoras
 - Paginación, búsqueda y filtros combinados para `GET /movies`.
-- Endpoints `PUT/PATCH` para actualizar películas existentes.
+- Endpoint `PUT` para reemplazos completos del recurso.
 - Control de concurrencia para escrituras seguras en `movies.json`.
-- `POST /movies` debería devolver el recurso creado con su `id`.
 - Documentación OpenAPI/Swagger y colección de Postman.
 - Tests unitarios e integración; CI simple (GitHub Actions).

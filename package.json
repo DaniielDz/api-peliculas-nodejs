@@ -1,0 +1,25 @@
+{
+  "name": "api-peliculas-nodejs",
+  "version": "1.0.0",
+  "description": "API REST construida con Node.js (módulos nativos) que implementa una separación por capas siguiendo el patrón MVC (Model–View–Controller). Permite listar películas, obtener por id, crear, eliminar y actualizar parcialmente películas, persistiendo los datos en `data/movies.json`.",
+  "main": "app.mjs",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DaniielDz/api-peliculas-nodejs.git"
+  },
+  "keywords": [],
+  "author": "DaniielDz",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/DaniielDz/api-peliculas-nodejs/issues"
+  },
+  "homepage": "https://github.com/DaniielDz/api-peliculas-nodejs#readme",
+  "devDependencies": {
+    "jest": "30.1.3",
+    "supertest": "7.1.4"
+  }
+}

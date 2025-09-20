@@ -4,7 +4,7 @@
   "description": "API REST construida con Node.js (módulos nativos) que implementa una separación por capas siguiendo el patrón MVC (Model–View–Controller). Permite listar películas, obtener por id, crear, eliminar y actualizar parcialmente películas, persistiendo los datos en `data/movies.json`.",
   "main": "app.mjs",
   "scripts": {
-    "test": "jest"
+    "test": "node --experimental-vm-modules node_modules/.bin/jest"
   },
   "repository": {
     "type": "git",

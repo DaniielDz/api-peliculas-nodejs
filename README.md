@@ -4,18 +4,33 @@ API REST construida con Node.js (módulos nativos) que implementa una separació
 
 ### Requisitos
 - **Node.js** 18+ (recomendado LTS)
-- No requiere dependencias externas ni `package.json`
+- **Jest** para testing (incluido en `package.json`)
 
 ### Puesta en marcha
 1. Clona el repositorio o copia la carpeta del proyecto.
 2. Sitúate en la raíz del proyecto.
-3. Ejecuta el servidor:
-
+3. Instala las dependencias:
+```bash
+npm install
+```
+4. Ejecuta el servidor:
 ```bash
 node app.mjs
 ```
 
 El servidor queda disponible en `http://localhost:3003`.
+
+### Testing
+Para ejecutar los tests unitarios:
+```bash
+npm test
+```
+
+Los tests cubren la lógica de negocio del proyecto, incluyendo:
+- Validación de títulos duplicados
+- Filtrado de películas por criterios múltiples
+- Validación de arrays vacíos
+- Creación de respuestas de error y éxito
 
 ### Arquitectura MVC + Services + Middlewares
 
@@ -83,6 +98,10 @@ api-peliculas-nodejs/
     sendJsonResponse.mjs
     verifyBodyStructure.mjs
     writeJSON.mjs
+  tests/
+    movieBusinessLogic.test.mjs
+  jest.config.js
+  package.json
   postman_collection.json
   postman_environment.json
   POSTMAN_README.md
@@ -230,4 +249,5 @@ La colección incluye todos los endpoints con casos de éxito y error, perfecta 
 - Paginación, búsqueda y filtros combinados para `GET /movies`.
 - Endpoint `PUT` para reemplazos completos del recurso.
 - Control de concurrencia para escrituras seguras en `movies.json`.
-- Tests unitarios e integración; CI simple (GitHub Actions).
+- Tests de integración y CI simple (GitHub Actions).
+- Coverage de testing más amplio para controllers y services.

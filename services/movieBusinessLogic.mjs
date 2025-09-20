@@ -44,7 +44,7 @@ export function filterMovies(movies, criteria) {
 /**
  * Valida si un array de películas está vacío
  * @param {Array} movies - Array de películas
- * @returns {boolean}
+ * @returns {boolean} true si el array está vacío, false en caso contrario
  */
 export function isMoviesArrayEmpty(movies) {
     return !movies || movies.length === 0;
